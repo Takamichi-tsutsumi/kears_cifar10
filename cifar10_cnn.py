@@ -2,11 +2,11 @@ from __future__ import print_function
 import os
 import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten
+from keras.layers import Dense, Activation, Flatten, Dropout
 from keras.layers.convolutional import Convolution2D, AveragePooling2D
 from keras.optimizers import SGD
 from keras.utils import np_utils
-from prepare_data import load_data, load_train
+from prepare_data import load_data, load_train, predict
 
 batch_size = 32
 nb_classes = 10
@@ -19,9 +19,9 @@ x_train, y_train = load_train()
 x_train = x_train.reshape(y_train.shape[0], 3, 32, 32).astype(np.float32) / 255
 y_train = np_utils.to_categorical(y_train)
 
-x_test, y_test = load_data('test_batch')
-x_test = x_test.reshape(y_test.shape[0], 3, 32, 32).astype(np.float32) / 255
-y_test = np_utils.to_categorical(y_test)
+x_test, y_test_classes = load_data('test_batch')
+x_test = x_test.reshape(y_test_classes.shape[0], 3, 32, 32).astype(np.float32) / 255
+y_test = np_utils.to_categorical(y_test_classes)
 
 print('datashape train {}'.format(x_train.shape))
 print('datashape test {}'.format(x_test.shape))
@@ -35,8 +35,10 @@ model.add(Activation('relu'))
 model.add(AveragePooling2D(pool_size=(3, 3), strides=(2, 2), border_mode='same'))
 model.add(Flatten())
 model.add(Dense(120))
+model.add(Dropout(0.5))
 model.add(Activation('relu'))
 model.add(Dense(84))
+model.add(Dropout(0.5))
 model.add(Activation('relu'))
 model.add(Dense(nb_classes))
 model.add(Activation('softmax'))
@@ -54,9 +56,4 @@ model.fit(x_train, y_train,
 
 model.save('./data/models/cnn_model.h5')
 
-
-def predict(model, x_test, y_test):
-    predict_classes = model.predict_classes(x_test)
-    accuracy = [x == y for x, y in zip(predict_classes, y_test)]
-    acc_rate = sum(1 for i in accuracy if i) / float(len(y_test)) * 100
-    print('accuracy:{}'.format(acc_rate))
+predict(model, x_test, y_test_classes)
