@@ -41,6 +41,14 @@ def load_train():
     return np.array(data), np.array(labels)
 
 
+def predict(model, x_test, y_test):
+    predict_classes = model.predict_classes(x_test)
+    accuracy = [x == y for (x, y) in zip(predict_classes, y_test)]
+    print(accuracy)
+    acc_rate = sum(i for i in accuracy if i) / float(len(y_test)) * 100
+    print('accuracy:{}'.format(acc_rate))
+
+
 if __name__ == '__main__':
     url = 'https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz'
     filename = url.split('/')[-1]
