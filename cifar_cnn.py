@@ -73,7 +73,7 @@ class Model(Sequential):
         self.prepared = True
 
     def save(self):
-        super(os.path.join('data/models/', self.model_name))
+        super(Model, self).save(os.path.join('data/models/', self.model_name))
 
     def train(self, validation_data=None):
         if self.prepared:
