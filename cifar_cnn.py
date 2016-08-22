@@ -72,13 +72,6 @@ class Model(Sequential):
     def save(self):
         super(os.path.join('data/models/', self.model_name))
 
-    def predict(self, x_test, y_test):
-        predict_classes = self.predict_classes(x_test)
-        accuracy = [x == y for (x, y) in zip(predict_classes, y_test)]
-        print(accuracy)
-        acc_rate = sum(i for i in accuracy if i) / float(len(y_test)) * 100
-        print('accuracy:{}'.format(acc_rate))
-
     def train(self, validation_data=None):
         if self.prepared:
             self.compile(loss='categorical_crossentropy',
@@ -103,5 +96,5 @@ if __name__ == '__main__':
     model = Model('cifar_cnn_with_momentum', 10, 25, 124, 32, 32, 3)
     model.set_train_data(x_train, y_train)
     model.train()
-    predict(model, x_test, y_test_classes)
+    predict(x_test, y_test_classes)
     model.save()
