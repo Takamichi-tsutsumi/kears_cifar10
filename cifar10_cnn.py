@@ -8,9 +8,9 @@ from keras.optimizers import SGD
 from keras.utils import np_utils
 from prepare_data import load_data, load_train, predict
 
-batch_size = 32
+batch_size = 64
 nb_classes = 10
-nb_epoch = 100
+nb_epoch = 150
 img_row = 32
 img_column = 32
 img_channel = 3
