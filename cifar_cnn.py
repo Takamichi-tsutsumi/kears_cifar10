@@ -10,6 +10,7 @@ from keras.optimizers import Adam
 from keras.utils import np_utils
 from prepare_data import load_data, load_train, predict
 import cPickle as pickle
+from dataset import *
 
 
 class Model(Sequential):
@@ -62,10 +63,12 @@ class Model(Sequential):
 
     def set_train_data(self, x, y):
         """input x is 2d matrix. y is vector."""
-        self.x_train = x.reshape(
-            y.shape[0], self.img_channel, self.img_row, self.img_column
-            ).astype(np.float32) / 255
+        # self.x_train = x.reshape(
+            # y.shape[0], self.img_channel, self.img_row, self.img_column
+            # ).astype(np.float32) / 255
         self.y_train = np_utils.to_categorical(y)
+        self.x_train = x
+        # self.y_train = npy
         print('Successfully set train data. Train model.')
         self.prepared = True
 
@@ -80,8 +83,8 @@ class Model(Sequential):
             self.fit(self.x_train, self.y_train,
                      batch_size=self.batch_size,
                      nb_epoch=self.nb_epoch,
-                     validation_split=0.1,
-                     #  validation_data=validation_data,
+                     #  validation_split=0.1,
+                     validation_data=validation_data,
                      shuffle=True,
                      show_accuracy=True)
 
@@ -90,11 +93,25 @@ class Model(Sequential):
 
 
 if __name__ == '__main__':
-    x_train, y_train = load_train()
+    with open('data/image_norm_zca.pkl', 'rb') as f:
+        images = pickle.load(f)
+        index = np.random.permutation(len(images['train']))
+        train_index = index[:-5000]
+        valid_index = index[-5000:]
+        train_x = images['train'][train_index].reshape((-1, 3, 32, 32))
+        valid_x = images['train'][valid_index].reshape((-1, 3, 32, 32))
+        test_x = images['test'].reshape((-1, 3, 32, 32))
 
-    x_test, y_test_classes = load_data('test_batch')
-    model = Model('cifar_cnn_with_momentum', 10, 25, 124, 32, 32, 3)
-    model.set_train_data(x_train, y_train)
-    model.train()
-    predict(x_test, y_test_classes)
+    with open('data/label.pkl', 'rb') as f:
+        labels = pickle.load(f)
+        train_y = labels['train'][train_index]
+        valid_y = labels['train'][valid_index]
+        valid_y = np_utils.to_categorical(valid_y)
+        test_y = labels['test']
+
+
+    model = Model('cifar_with_norm', 10, 25, 124, 32, 32, 3)
+    model.set_train_data(train_x, train_y)
+    model.train(validation_data=(valid_x, valid_y))
     model.save()
+    predict(test_x, test_y)
