@@ -4,9 +4,9 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Dropout
 from keras.layers.convolutional import \
- Convolution2D, AveragePooling2D, MaxPooling2D
+ Convolution2D, AveragePooling2D, MaxPooling2D, ZeroPadding2D
 from keras.layers.normalization import BatchNormalization
-from keras.optimizers import SGD
+from keras.optimizers import Adam
 from keras.utils import np_utils
 from prepare_data import load_data, load_train, predict
 import cPickle as pickle
@@ -31,40 +31,34 @@ class Model(Sequential):
         self.trained = False
 
         # Convolution layers
+        self.add(ZeroPadding2D(input_shape=(3, 32, 32), padding=(2, 2)))
         self.add(Convolution2D(
-            6, 5, 5, border_mode='valid', input_shape=(3, 32, 32)))
+            64, 5, 5, border_mode='valid', activation='relu'))
         self.add(BatchNormalization())
-        self.add(Activation('relu'))
         self.add(MaxPooling2D(
-            pool_size=(2, 2), strides=(1, 1), border_mode='same'))
+            pool_size=(3, 3), strides=(2, 2), border_mode='same'))
 
-        self.add(Convolution2D(12, 5, 5, border_mode='valid'))
+        self.add(ZeroPadding2D(padding=(2, 2)))
+        self.add(Convolution2D(64, 5, 5, border_mode='valid', activation='relu'))
         self.add(BatchNormalization())
-        self.add(Activation('relu'))
         self.add(MaxPooling2D(
-            pool_size=(2, 2), strides=(2, 2), border_mode='same'))
+            pool_size=(3, 3), strides=(2, 2), border_mode='same'))
 
-        self.add(Convolution2D(24, 3, 3, border_mode='valid'))
+        self.add(ZeroPadding2D(padding=(2, 2)))
+        self.add(Convolution2D(128, 5, 5, border_mode='valid', activation='relu'))
         self.add(BatchNormalization())
-        self.add(Activation('relu'))
         self.add(MaxPooling2D(
-            pool_size=(2, 2), strides=(1, 1), border_mode='same'))
-
-        self.add(Convolution2D(48, 3, 3, border_mode='valid'))
-        self.add(BatchNormalization())
-        self.add(Activation('relu'))
-        self.add(MaxPooling2D(
-            pool_size=(2, 2), strides=(1, 1), border_mode='same'))
+            pool_size=(3, 3), strides=(2, 2), border_mode='same'))
 
         # Fully connected layer
         self.add(Flatten())
-        self.add(Dense(312))
+        self.add(Dense(1000))
         self.add(Dropout(0.25))
         self.add(Activation('relu'))
         self.add(Dense(self.nb_classes))
         self.add(Activation('softmax'))
 
-        self.optimizer = SGD(lr=0.05, decay=1e-7)
+        self.optimizer = Adam(lr=0.001, epsilon=1e-8)
 
     def set_train_data(self, x, y):
         """input x is 2d matrix. y is vector."""
@@ -106,8 +100,8 @@ if __name__ == '__main__':
     x_train, y_train = load_train()
 
     x_test, y_test_classes = load_data('test_batch')
-    model = Model('cifar_cnn_with_momentum', 10, 25, 32, 32, 32, 3)
+    model = Model('cifar_cnn_with_momentum', 10, 25, 124, 32, 32, 3)
     model.set_train_data(x_train, y_train)
     model.train()
-    model.predict(x_test, y_test_classes)
+    predict(model, x_test, y_test_classes)
     model.save()
